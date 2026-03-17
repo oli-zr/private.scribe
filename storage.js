@@ -5,7 +5,7 @@
  */
 
 // ── IndexedDB ──────────────────────────────────────────────────────────────────
-const DB_NAME    = 'memo-v2';
+const DB_NAME    = 'privatescribe-v2';
 const DB_VERSION = 1;
 const STORE      = 'settings';
 

@@ -1,5 +1,5 @@
 /**
- * app.js – Memo App – Haupt-Logik
+ * app.js – PrivateScribe App – Haupt-Logik
  * ES-Modul, kein Build-Schritt nötig.
  * Whisper läuft komplett lokal im Browser via WebAssembly.
  */
@@ -56,8 +56,8 @@ async function getSessionDir(session) {
 // ── Boot ──────────────────────────────────────────────────────────────────────
 async function boot() {
   // Präferenzen laden
-  S.modelSize = localStorage.getItem('memo-model') || 'small';
-  S.theme = localStorage.getItem('memo-theme') || 'dark';
+  S.modelSize = localStorage.getItem('privatescribe-model') || 'small';
+  S.theme = localStorage.getItem('privatescribe-theme') || 'dark';
   applyTheme();
 
   // FSA-Unterstützung prüfen
@@ -81,7 +81,7 @@ async function initApp() {
   document.getElementById('welcome-screen').classList.add('hidden');
 
   S.sessions = await loadIndex();
-  // In-Memory-Felder initialisieren (nicht in index.json)
+  // Arbeitsspeicher-Felder initialisieren (nicht in index.json)
   S.sessions.forEach(s => {
     if (s.transcript === undefined) s.transcript = undefined; // lazy
     if (s.notes      === undefined) s.notes      = undefined;
@@ -112,7 +112,7 @@ function updateThemeToggle() {
 
 function toggleTheme() {
   S.theme = S.theme === 'dark' ? 'light' : 'dark';
-  localStorage.setItem('memo-theme', S.theme);
+  localStorage.setItem('privatescribe-theme', S.theme);
   applyTheme();
 }
 
@@ -131,7 +131,7 @@ function updateWelcomeModelChoice() {
 document.querySelectorAll('.model-option').forEach(opt => {
   opt.addEventListener('click', () => {
     S.modelSize = opt.dataset.model;
-    localStorage.setItem('memo-model', S.modelSize);
+    localStorage.setItem('privatescribe-model', S.modelSize);
     updateWelcomeModelChoice();
     updateModelSelector();
   });
@@ -749,7 +749,7 @@ document.getElementById('btn-model-selector').addEventListener('click', e => {
 document.getElementById('model-dropdown').querySelectorAll('.model-drop-item').forEach(item => {
   item.addEventListener('click', () => {
     S.modelSize = item.dataset.model;
-    localStorage.setItem('memo-model', S.modelSize);
+    localStorage.setItem('privatescribe-model', S.modelSize);
     updateModelSelector();
     updateWelcomeModelChoice();
     document.getElementById('model-dropdown').classList.add('hidden');
