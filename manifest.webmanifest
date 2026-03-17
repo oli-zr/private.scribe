@@ -1,5 +1,5 @@
 {
-  "name": "PrivateScribe — Lokale Aufnahmen",
+  "name": "PrivateScribe",
   "short_name": "PrivateScribe",
   "description": "Lokale Audioaufnahmen mit Transkription direkt im Browser.",
   "start_url": ".",
