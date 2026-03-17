@@ -1,6 +1,6 @@
 {
-  "name": "Memo — Lokale Aufnahmen",
-  "short_name": "Memo",
+  "name": "PrivateScribe — Lokale Aufnahmen",
+  "short_name": "PrivateScribe",
   "description": "Lokale Audioaufnahmen mit Transkription direkt im Browser.",
   "start_url": ".",
   "display": "standalone",
