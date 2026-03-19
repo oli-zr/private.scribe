@@ -9,7 +9,7 @@ import {
   deleteFile, deleteDir,
 } from './storage.js';
 
-import { transcribeAudio, warmUpWorker } from './transcribe.js';
+import { configureModelCache, transcribeAudio, warmUpWorker } from './transcribe.js';
 
 // ── App-Zustand ────────────────────────────────────────────────────────────────
 const S = {
@@ -59,6 +59,12 @@ async function getSessionDir(session) {
   return getOrCreateDir(S.rootDir, session.dirName);
 }
 
+async function ensureModelCacheDir() {
+  if (!S.rootDir) return;
+  await getOrCreateDir(S.rootDir, '.privatescribe-models');
+  await configureModelCache(S.rootDir);
+}
+
 // ── Boot ──────────────────────────────────────────────────────────────────────
 async function boot() {
   // Präferenzen laden
@@ -86,6 +92,8 @@ async function boot() {
 async function initApp() {
   document.getElementById('welcome-screen').classList.add('hidden');
 
+  await ensureModelCacheDir();
+
   S.sessions = await loadIndex();
   // Arbeitsspeicher-Felder initialisieren (nicht in index.json)
   S.sessions.forEach(s => {
@@ -105,7 +113,7 @@ async function initApp() {
   updateThemeToggle();
 
   // Worker vorladen (damit erstes Transkribieren schneller startet)
-  warmUpWorker();
+  await warmUpWorker(S.rootDir);
 }
 
 
@@ -756,7 +764,7 @@ async function runTranscription(session, audioBlob) {
   updateLiveStatus(session);
 
   try {
-    const text = await transcribeAudio(audioBlob, S.modelSize, (status, extra) => {
+    const text = await transcribeAudio(audioBlob, S.modelSize, S.rootDir, (status, extra) => {
       session.transcriptStatus = status;
       if (status === 'loading' && extra) {
         session.downloadProgress = {
