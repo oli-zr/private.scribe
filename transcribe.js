@@ -8,6 +8,7 @@
  */
 
 let worker = null;
+let workerConfiguredRoot = null;
 
 function ensureWorker() {
   if (!worker) {
@@ -15,6 +16,38 @@ function ensureWorker() {
     worker = new Worker('./worker.js', { type: 'module' });
   }
   return worker;
+}
+
+export async function configureModelCache(rootDirHandle) {
+  const w = ensureWorker();
+  if (rootDirHandle === workerConfiguredRoot) return;
+
+  await new Promise((resolve, reject) => {
+    const handleMessage = ({ data }) => {
+      if (data.type === 'cache-configured') {
+        cleanup();
+        workerConfiguredRoot = rootDirHandle;
+        resolve();
+      } else if (data.type === 'cache-error') {
+        cleanup();
+        reject(new Error(data.message));
+      }
+    };
+
+    const handleError = (err) => {
+      cleanup();
+      reject(err instanceof Error ? err : new Error('Worker-Konfiguration fehlgeschlagen.'));
+    };
+
+    const cleanup = () => {
+      w.removeEventListener('message', handleMessage);
+      w.removeEventListener('error', handleError);
+    };
+
+    w.addEventListener('message', handleMessage);
+    w.addEventListener('error', handleError, { once: true });
+    w.postMessage({ type: 'configure-cache', rootDirHandle });
+  });
 }
 
 /**
@@ -39,6 +72,7 @@ export async function decodeAudioToFloat32(blob) {
  *
  * @param {Blob}     audioBlob   - Aufnahme-Blob (webm/wav/mp3)
  * @param {'small'|'medium'} modelSize
+ * @param {FileSystemDirectoryHandle | null} rootDirHandle
  * @param {function} onStatus    - (status: string, extra?: object) => void
  *   Mögliche Status-Werte:
  *     'decoding'    – Audio wird dekodiert
@@ -49,7 +83,7 @@ export async function decodeAudioToFloat32(blob) {
  *
  * @returns {Promise<string>} Transkriptions-Text
  */
-export function transcribeAudio(audioBlob, modelSize, onStatus) {
+export function transcribeAudio(audioBlob, modelSize, rootDirHandle, onStatus) {
   return new Promise(async (resolve, reject) => {
     let w;
 
@@ -91,7 +125,7 @@ export function transcribeAudio(audioBlob, modelSize, onStatus) {
       // Das vermeidet Struktur-/Typ-Probleme beim structured clone.
       const transferBuffer = audioData.buffer;
       w.postMessage(
-        { type: 'transcribe', audioBuffer: transferBuffer, sampleRate: 16000, modelSize },
+        { type: 'transcribe', audioBuffer: transferBuffer, sampleRate: 16000, modelSize, rootDirHandle },
         [transferBuffer]
       );
 
@@ -106,6 +140,9 @@ export function transcribeAudio(audioBlob, modelSize, onStatus) {
  * Worker vorab initialisieren (optional, für schnelleren Start).
  * Wird im Hintergrund gestartet ohne Transkription.
  */
-export function warmUpWorker() {
+export async function warmUpWorker(rootDirHandle = null) {
   ensureWorker();
+  if (rootDirHandle) {
+    await configureModelCache(rootDirHandle);
+  }
 }
