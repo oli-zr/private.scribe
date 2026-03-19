@@ -71,11 +71,7 @@ Audio, transcripts, and notes stay in your local working folder. The app does no
 
 The only network-dependent part is the initial download of the Whisper model and runtime assets.
 
-## Development
 
-The repository is intentionally simple. Edit the static files, start a local server, and test in the browser.
-
-There are currently no automated tests in the repository.
 
 ## License
 
